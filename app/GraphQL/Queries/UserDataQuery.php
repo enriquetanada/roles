@@ -1,0 +1,44 @@
+<?php
+namespace App\GraphQL\Queries;
+
+use GraphQL;
+use GraphQL\Type\Definition\Type;
+use Rebing\GraphQL\Support\Query;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+use GraphQL\Type\Definition\ResolveInfo;
+
+use Auth;
+class UserDataQuery extends Query
+{
+    protected $attributes = [
+        'name' => 'UserDataQuery query',
+    ];
+
+    public function type(): Type
+    {
+        return GraphQL::type('UserDataType');
+    }
+    
+    public function resolve($root, $args)
+    {
+        $user = Auth::user();
+        $response_obj = new \stdClass();
+
+        if ($user->can('user_view')) {
+            $userModel = new User();
+
+            $response_obj = new \stdClass();
+            $response_obj->users = $userModel->getAllUsers();
+            $response_obj->roles = Role::all();
+            return $response_obj;
+        } else {
+            $response_obj->error = true;
+            $response_obj->message = 'You are not authorized to perform this action';
+            return $response_obj;
+        }  
+    }
+    
+}
+
+?>
